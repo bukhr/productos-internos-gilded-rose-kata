@@ -108,15 +108,21 @@ describe("Gilded Rose", () => {
   });
 
   // Until the feature is developed
-  describe.skip("Conjured items", () => {
+  describe("Conjured items", () => {
     it("should decrease quality by 2", () => {
-      const gildedRose = new GildedRose([new Item("Conjured", 1, 2)]);
+      const gildedRose = new GildedRose([new Item("Conjured Mana Cake", 1, 2)]);
       const items = gildedRose.updateQuality();
       expect(items[0].quality).toBe(0);
     });
 
     it("should decrease quality by 4 after sellIn", () => {
-      const gildedRose = new GildedRose([new Item("Conjured", 0, 4)]);
+      const gildedRose = new GildedRose([new Item("Conjured Mana Cake", 0, 4)]);
+      const items = gildedRose.updateQuality();
+      expect(items[0].quality).toBe(0);
+    });
+
+    it("should not decrease quality below 0", () => {
+      const gildedRose = new GildedRose([new Item("Conjured Mana Cake", 1, 1)]);
       const items = gildedRose.updateQuality();
       expect(items[0].quality).toBe(0);
     });

@@ -11,13 +11,13 @@ export class Item {
 }
 
 export class UpdateStrategy {
-  update(item: Item): void {
+  update(_item: Item): Item {
     throw new Error("Not implemented");
   }
 }
 
 export class BrieUpdateStrategy extends UpdateStrategy {
-  update(item: Item): void {
+  update(item: Item): Item {
     if (item.quality < 50) {
       item.quality = item.quality + 1;
     }
@@ -26,46 +26,63 @@ export class BrieUpdateStrategy extends UpdateStrategy {
     if (item.sellIn < 0 && item.quality < 50) {
       item.quality = item.quality + 1;
     }
+
+    return item;
   }
 }
 
 export class BackstagePassesUpdateStrategy extends UpdateStrategy {
-  update(item: Item): void {
-    if (item.quality < 50) {
-      item.quality = item.quality + 1;
-      if (item.sellIn < 11 && item.quality < 50) {
-        item.quality = item.quality + 1;
-      }
-      if (item.sellIn < 6 && item.quality < 50) {
-        item.quality = item.quality + 1;
-      }
+  changeRate(item: Item): number {
+    if (item.sellIn < 6) {
+      return 3;
+    } else if (item.sellIn < 11) {
+      return 2;
     }
+    return 1;
+  }
+
+  update(item: Item): Item {
+    const changeRate = this.changeRate(item);
 
     item.sellIn = item.sellIn - 1;
 
     if (item.sellIn < 0) {
       item.quality = 0;
+      return item;
     }
+
+    item.quality = Math.min(50, item.quality + changeRate);
+    return item;
   }
 }
 
 export class LegendaryUpdateStrategy extends UpdateStrategy {
-  update(item: Item): void {
-    // do nothing
+  update(item: Item): Item {
+    return item;
+  }
+}
+
+export class ConjuredUpdateStrategy extends UpdateStrategy {
+  changeRate(item: Item): number {
+    return item.sellIn < 0 ? -4 : -2;
+  }
+
+  update(item: Item): Item {
+    item.sellIn = item.sellIn - 1;
+    item.quality = Math.max(0, item.quality + this.changeRate(item));
+    return item;
   }
 }
 
 export class NormalUpdateStrategy extends UpdateStrategy {
-  update(item: Item): void {
-    if (item.quality > 0) {
-      item.quality = item.quality - 1;
-    }
+  changeRate(item: Item): number {
+    return item.sellIn < 0 ? -2 : -1;
+  }
 
+  update(item: Item): Item {
     item.sellIn = item.sellIn - 1;
-
-    if (item.sellIn < 0 && item.quality > 0) {
-      item.quality = item.quality - 1;
-    }
+    item.quality = Math.max(0, item.quality + this.changeRate(item));
+    return item;
   }
 }
 
@@ -77,8 +94,10 @@ export class GildedRose {
     this.items = items;
     this.strategies = {
       "Aged Brie": new BrieUpdateStrategy(),
-      "Backstage passes to a TAFKAL80ETC concert": new BackstagePassesUpdateStrategy(),
+      "Backstage passes to a TAFKAL80ETC concert":
+        new BackstagePassesUpdateStrategy(),
       "Sulfuras, Hand of Ragnaros": new LegendaryUpdateStrategy(),
+      "Conjured Mana Cake": new ConjuredUpdateStrategy(),
     };
   }
 
