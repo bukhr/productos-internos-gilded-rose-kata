@@ -10,14 +10,14 @@ export class Item {
   }
 }
 
-export class GildedRose {
-  items: Array<Item>;
-
-  constructor(items = [] as Array<Item>) {
-    this.items = items;
+export class UpdateStrategy {
+  update(item: Item): void {
+    throw new Error("Not implemented");
   }
+}
 
-  updateBrie(item: Item) {
+export class BrieUpdateStrategy extends UpdateStrategy {
+  update(item: Item): void {
     if (item.quality < 50) {
       item.quality = item.quality + 1;
     }
@@ -27,8 +27,10 @@ export class GildedRose {
       item.quality = item.quality + 1;
     }
   }
+}
 
-  updateBackstagePasses(item: Item) {
+export class BackstagePassesUpdateStrategy extends UpdateStrategy {
+  update(item: Item): void {
     if (item.quality < 50) {
       item.quality = item.quality + 1;
       if (item.sellIn < 11 && item.quality < 50) {
@@ -45,12 +47,16 @@ export class GildedRose {
       item.quality = 0;
     }
   }
+}
 
-  updateLegendary(item: Item) {
+export class LegendaryUpdateStrategy extends UpdateStrategy {
+  update(item: Item): void {
     // do nothing
   }
+}
 
-  updateNormal(item: Item) {
+export class NormalUpdateStrategy extends UpdateStrategy {
+  update(item: Item): void {
     if (item.quality > 0) {
       item.quality = item.quality - 1;
     }
@@ -61,27 +67,26 @@ export class GildedRose {
       item.quality = item.quality - 1;
     }
   }
+}
 
-  get strategies() {
-    return {
-      "Aged Brie": this.updateBrie,
-      "Backstage passes to a TAFKAL80ETC concert": this.updateBackstagePasses,
-      "Sulfuras, Hand of Ragnaros": this.updateLegendary
+export class GildedRose {
+  items: Array<Item>;
+  strategies: { [key: string]: UpdateStrategy };
+
+  constructor(items = [] as Array<Item>) {
+    this.items = items;
+    this.strategies = {
+      "Aged Brie": new BrieUpdateStrategy(),
+      "Backstage passes to a TAFKAL80ETC concert": new BackstagePassesUpdateStrategy(),
+      "Sulfuras, Hand of Ragnaros": new LegendaryUpdateStrategy(),
     };
   }
 
-  updateQuality() {
-    for (let i = 0; i < this.items.length; i++) {
-      const item = this.items[i];
-
-      const updateItemStrategy = this.strategies[item.name];
-
-      if (updateItemStrategy) {
-        updateItemStrategy(item);
-      } else {
-        this.updateNormal(item);
-      }
-    }
+  updateQuality(): Array<Item> {
+    this.items.forEach((item) => {
+      const strategy = this.strategies[item.name] || new NormalUpdateStrategy();
+      strategy.update(item);
+    });
 
     return this.items;
   }

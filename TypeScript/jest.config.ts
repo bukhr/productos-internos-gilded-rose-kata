@@ -9,5 +9,6 @@ export default {
   transform: {
     '^.+\\.tsx?$': '@swc/jest',
   },
+  verbose: true,
   moduleNameMapper: pathsToModuleNameMapper(compilerOptions.paths, { prefix: '<rootDir>/' } ),
 };
