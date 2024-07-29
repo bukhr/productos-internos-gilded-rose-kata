@@ -62,24 +62,25 @@ export class GildedRose {
     }
   }
 
+  get strategies() {
+    return {
+      "Aged Brie": this.updateBrie,
+      "Backstage passes to a TAFKAL80ETC concert": this.updateBackstagePasses,
+      "Sulfuras, Hand of Ragnaros": this.updateLegendary
+    };
+  }
+
   updateQuality() {
     for (let i = 0; i < this.items.length; i++) {
-      if (this.items[i].name == "Aged Brie") {
-        this.updateBrie(this.items[i]);
-        continue;
-      }
+      const item = this.items[i];
 
-      if (this.items[i].name == "Backstage passes to a TAFKAL80ETC concert") {
-        this.updateBackstagePasses(this.items[i]);
-        continue;
-      }
+      const updateItemStrategy = this.strategies[item.name];
 
-      if (this.items[i].name == "Sulfuras, Hand of Ragnaros") {
-        this.updateLegendary(this.items[i]);
-        continue;
+      if (updateItemStrategy) {
+        updateItemStrategy(item);
+      } else {
+        this.updateNormal(item);
       }
-
-      this.updateNormal(this.items[i]);
     }
 
     return this.items;
