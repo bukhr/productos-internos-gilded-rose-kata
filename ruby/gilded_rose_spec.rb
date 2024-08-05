@@ -3,79 +3,103 @@ require 'rspec'
 require File.join(File.dirname(__FILE__), 'gilded_rose')
 
 describe GildedRose do
-  it "does not change the name" do
-    items = [Item.new("foo", 0, 0)]
-    GildedRose.new(items).update_quality()
-    expect(items[0].name).to eq "fixme"
-  end
+  context "update quality" do
+    context "normal item" do
+      it "does not change the name" do
+        items = [Item.new("foo", 0, 0)]
+        GildedRose.new(items).update_quality()
+        expect(items[0].name).to eq "foo"
+      end
 
-  context 'para items normales' do
-    before do
-      ## Arrange
-      @items = [Item.new("foo", 10, 2)]
-      @gilded = GildedRose.new(@items)
-    end
-    
+      it "decreases the quality by 1" do
+        items = [Item.new("foo", 0, 1)]
+        GildedRose.new(items).update_quality()
+        expect(items[0].quality).to eq 0
+      end
 
-    it 'decrementa la calidad del item' do
-      #Act
-      @gilded.update_quality()
-      
-      #Assert
-      expect(@items[0].quality).to eq 1
-    end
+      it "decreases the sell_in by 1" do
+        items = [Item.new("foo", 1, 1)]
+        GildedRose.new(items).update_quality()
+        expect(items[0].sell_in).to eq 0
+      end
 
-    it 'decrementa los dias para vender el item' do    
-      #Act
-      @gilded.update_quality()
-      
-      #Assert
-      expect(@items[0].sell_in).to eq 9
-    end
+      it "decreases the quality by 2 after sell_in date" do
+        items = [Item.new("foo", 0, 2)]
+        GildedRose.new(items).update_quality()
+        expect(items[0].quality).to eq 0
+      end
 
-    it 'decrementa la calidad del item al doble de velocidad cuando ya no quedan dias para venderlo' do
-      @items[0].sell_in = 0
-      @items[0].quality = 20
-      
-      @gilded.update_quality()
-
-      expect(@items[0].quality).to eq 18
+      it "after sell_in date, quality is 0" do
+        items = [Item.new("foo", -1, 10)]
+        GildedRose.new(items).update_quality()
+        expect(items[0].quality).to eq 0
+      end
     end
 
-    it 'no decrementa la calidad del item a negativo' do
-      @items[0].quality = 0
-      
-      @gilded.update_quality()
+    context "Aged Brie" do
+      it "increases the quality by 1" do
+        items = [Item.new("Aged Brie", 2, 0)]
+        GildedRose.new(items).update_quality()
+        expect(items[0].quality).to eq 1
+      end
 
-      expect(@items[0].quality).to eq 0
+      it "decreases the sell_in by 1" do
+        items = [Item.new("Aged Brie", 1, 0)]
+        GildedRose.new(items).update_quality()
+        expect(items[0].sell_in).to eq 0
+      end
+
+      it "increases the quality by 2 after sell_in date" do
+        items = [Item.new("Aged Brie", 0, 2)]
+        GildedRose.new(items).update_quality()
+        expect(items[0].quality).to eq 4
+      end
+
+      it "quality is never more than 50" do
+        items = [Item.new("Aged Brie", 0, 50)]
+        GildedRose.new(items).update_quality()
+        expect(items[0].quality).to eq 50
+      end
     end
-  end
 
-  context 'para items Aged Brie' do
-    it 'incrementa su calidad'
+    context "Sulfuras, Hand of Ragnaros" do
+      it "does not change the quality" do
+        items = [Item.new("Sulfuras, Hand of Ragnaros", 0, 80)]
+        GildedRose.new(items).update_quality()
+        expect(items[0].quality).to eq 80
+      end
 
-    it 'incrementa su calidad en 2 cuando ya no quedan dias de venta'
+      it "does not change the sell_in" do
+        items = [Item.new("Sulfuras, Hand of Ragnaros", 0, 80)]
+        GildedRose.new(items).update_quality()
+        expect(items[0].sell_in).to eq 0
+      end
+    end
 
-    it 'no incrementa su calidad por sobre 50'
-  end
+    context "Backstage passes to a TAFKAL80ETC concert" do
+      it "increases the quality by 1 when sell_in > 10" do
+        items = [Item.new("Backstage passes to a TAFKAL80ETC concert", 11, 0)]
+        GildedRose.new(items).update_quality()
+        expect(items[0].quality).to eq 1
+      end
 
-  context 'para items Sulfuras' do
-    it 'no cambia su calidad'
+      it "increases the quality by 2 when sell_in <= 10 and > 5" do
+        items = [Item.new("Backstage passes to a TAFKAL80ETC concert", 10, 0)]
+        GildedRose.new(items).update_quality()
+        expect(items[0].quality).to eq 2
+      end
 
-    it 'no cambia los dias para venderlo'
-  end
+      it "increases the quality by 3 when sell_in <= 5 and > 0" do
+        items = [Item.new("Backstage passes to a TAFKAL80ETC concert", 5, 0)]
+        GildedRose.new(items).update_quality()
+        expect(items[0].quality).to eq 3
+      end
 
-  context 'para items Backstage Pass' do
-    it 'incrementa su calidad si quedan más de 10 días para venderlo'
-
-    it 'incrementa su calidad en 2 si quedan 10 dias o menos para venderlo'
-
-    it 'incrementa su calidad en 3 si quedan 5 dias o menos para venderlo'
-
-    it 'decrementa su calidad a 0 si ya no quedan dias para venderlo'
-  end
-
-  context 'para items conjurados' do
-    it 'decrementa su calidad en 2'
+      it "quality is 0 after sell_in date" do
+        items = [Item.new("Backstage passes to a TAFKAL80ETC concert", 0, 10)]
+        GildedRose.new(items).update_quality()
+        expect(items[0].quality).to eq 0
+      end
+    end
   end
 end
