@@ -2,6 +2,7 @@ class GildedRose
 
   def initialize(items)
     @items = items
+    self.max_quality = 50
   end
   
   def update_quality()
@@ -34,12 +35,12 @@ class GildedRose
   end
 
   def update_aged_brie(item)
-    if item.quality < 50
+    if item.quality < self.max_quality
       item.quality += 1
     end
     item.sell_in -= 1
     if item.sell_in < 0
-      if item.quality < 50
+      if item.quality < self.max_quality
         item.quality += 1
       end
     end
@@ -54,9 +55,9 @@ class GildedRose
     if item.sell_in < 0
       item.quality = 0
     else
-      item.quality += 1 if item.quality < 50
-      item.quality += 1 if item.sell_in < 10 && item.quality < 50
-      item.quality += 1 if item.sell_in < 5 && item.quality < 50
+      item.quality += 1 if item.quality < self.max_quality
+      item.quality += 1 if item.sell_in < 10 && item.quality < self.max_quality
+      item.quality += 1 if item.sell_in < 5 && item.quality < self.max_quality
     end
   end
 end
