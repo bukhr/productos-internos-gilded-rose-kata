@@ -10,59 +10,102 @@ export class Item {
   }
 }
 
+export class UpdateStrategy {
+  update(_item: Item): Item {
+    throw new Error("Not implemented");
+  }
+}
+
+export class BrieUpdateStrategy extends UpdateStrategy {
+  update(item: Item): Item {
+    if (item.quality < 50) {
+      item.quality = item.quality + 1;
+    }
+    item.sellIn = item.sellIn - 1;
+
+    if (item.sellIn < 0 && item.quality < 50) {
+      item.quality = item.quality + 1;
+    }
+
+    return item;
+  }
+}
+
+export class BackstagePassesUpdateStrategy extends UpdateStrategy {
+  changeRate(item: Item): number {
+    if (item.sellIn < 6) {
+      return 3;
+    } else if (item.sellIn < 11) {
+      return 2;
+    }
+    return 1;
+  }
+
+  update(item: Item): Item {
+    const changeRate = this.changeRate(item);
+
+    item.sellIn = item.sellIn - 1;
+
+    if (item.sellIn < 0) {
+      item.quality = 0;
+      return item;
+    }
+
+    item.quality = Math.min(50, item.quality + changeRate);
+    return item;
+  }
+}
+
+export class LegendaryUpdateStrategy extends UpdateStrategy {
+  update(item: Item): Item {
+    return item;
+  }
+}
+
+export class ConjuredUpdateStrategy extends UpdateStrategy {
+  changeRate(item: Item): number {
+    return item.sellIn < 0 ? -4 : -2;
+  }
+
+  update(item: Item): Item {
+    item.sellIn = item.sellIn - 1;
+    item.quality = Math.max(0, item.quality + this.changeRate(item));
+    return item;
+  }
+}
+
+export class NormalUpdateStrategy extends UpdateStrategy {
+  changeRate(item: Item): number {
+    return item.sellIn < 0 ? -2 : -1;
+  }
+
+  update(item: Item): Item {
+    item.sellIn = item.sellIn - 1;
+    item.quality = Math.max(0, item.quality + this.changeRate(item));
+    return item;
+  }
+}
+
 export class GildedRose {
   items: Array<Item>;
+  strategies: { [key: string]: UpdateStrategy };
 
   constructor(items = [] as Array<Item>) {
     this.items = items;
+    this.strategies = {
+      "Aged Brie": new BrieUpdateStrategy(),
+      "Backstage passes to a TAFKAL80ETC concert":
+        new BackstagePassesUpdateStrategy(),
+      "Sulfuras, Hand of Ragnaros": new LegendaryUpdateStrategy(),
+      "Conjured Mana Cake": new ConjuredUpdateStrategy(),
+    };
   }
 
-  updateQuality() {
-    for (let i = 0; i < this.items.length; i++) {
-      if (this.items[i].name != 'Aged Brie' && this.items[i].name != 'Backstage passes to a TAFKAL80ETC concert') {
-        if (this.items[i].quality > 0) {
-          if (this.items[i].name != 'Sulfuras, Hand of Ragnaros') {
-            this.items[i].quality = this.items[i].quality - 1
-          }
-        }
-      } else {
-        if (this.items[i].quality < 50) {
-          this.items[i].quality = this.items[i].quality + 1
-          if (this.items[i].name == 'Backstage passes to a TAFKAL80ETC concert') {
-            if (this.items[i].sellIn < 11) {
-              if (this.items[i].quality < 50) {
-                this.items[i].quality = this.items[i].quality + 1
-              }
-            }
-            if (this.items[i].sellIn < 6) {
-              if (this.items[i].quality < 50) {
-                this.items[i].quality = this.items[i].quality + 1
-              }
-            }
-          }
-        }
-      }
-      if (this.items[i].name != 'Sulfuras, Hand of Ragnaros') {
-        this.items[i].sellIn = this.items[i].sellIn - 1;
-      }
-      if (this.items[i].sellIn < 0) {
-        if (this.items[i].name != 'Aged Brie') {
-          if (this.items[i].name != 'Backstage passes to a TAFKAL80ETC concert') {
-            if (this.items[i].quality > 0) {
-              if (this.items[i].name != 'Sulfuras, Hand of Ragnaros') {
-                this.items[i].quality = this.items[i].quality - 1
-              }
-            }
-          } else {
-            this.items[i].quality = this.items[i].quality - this.items[i].quality
-          }
-        } else {
-          if (this.items[i].quality < 50) {
-            this.items[i].quality = this.items[i].quality + 1
-          }
-        }
-      }
-    }
+  updateQuality(): Array<Item> {
+    this.items.forEach((item) => {
+      const strategy = this.strategies[item.name] || new NormalUpdateStrategy();
+      strategy.update(item);
+    });
 
     return this.items;
   }
