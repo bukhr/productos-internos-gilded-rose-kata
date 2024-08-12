@@ -7,47 +7,45 @@ class GildedRose
   def update_quality()
     @items.each do |item|
       if item.name != "Aged Brie" and item.name != "Backstage passes to a TAFKAL80ETC concert"
-        if item.quality > 0
-          if item.name != "Sulfuras, Hand of Ragnaros"
-            item.quality = item.quality - 1
-          end
-        end
-      else
-        if item.quality < 50
-          item.quality = item.quality + 1
-          if item.name == "Backstage passes to a TAFKAL80ETC concert"
-            if item.sell_in < 11
-              if item.quality < 50
-                item.quality = item.quality + 1
-              end
-            end
-            if item.sell_in < 6
-              if item.quality < 50
-                item.quality = item.quality + 1
-              end
-            end
-          end
-        end
+        update_quality_for_non_legendary_item(item)
+      elsif item.quality < 50
+        item.quality += 1
+        backstage_passes_update(item)
       end
       if item.name != "Sulfuras, Hand of Ragnaros"
-        item.sell_in = item.sell_in - 1
+        item.sell_in -= 1
       end
       if item.sell_in < 0
-        if item.name != "Aged Brie"
-          if item.name != "Backstage passes to a TAFKAL80ETC concert"
-            if item.quality > 0
-              if item.name != "Sulfuras, Hand of Ragnaros"
-                item.quality = item.quality - 1
-              end
-            end
-          else
-            item.quality = item.quality - item.quality
-          end
+        if item.name == "Aged Brie"
+          increase_quality_when_under_50(item)
+        elsif item.name == "Backstage passes to a TAFKAL80ETC concert"
+          item.quality = 0
         else
-          if item.quality < 50
-            item.quality = item.quality + 1
-          end
+          update_quality_for_non_legendary_item(item)
         end
+      end
+    end
+  end
+
+  def backstage_passes_update(item)
+    if item.name == "Backstage passes to a TAFKAL80ETC concert"
+      increase_quality_when_under_50(item) if item.sell_in < 11
+      increase_quality_when_under_50(item) if item.sell_in < 6
+    end
+  end
+
+  private
+
+  def increase_quality_when_under_50(item)
+    if item.quality < 50
+      item.quality += 1
+    end
+  end
+
+  def update_quality_for_non_legendary_item(item)
+    if item.quality > 0
+      if item.name != "Sulfuras, Hand of Ragnaros"
+        item.quality -= 1
       end
     end
   end
